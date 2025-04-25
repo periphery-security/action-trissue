@@ -2,7 +2,8 @@
 
 ### Features
 
-* add outputs ([04c0551](https://github.com/qomodo-labs/action-trissue/commit/04c05519c995f40139fc3875fdf37964b0f4e145))
+- add outputs
+  ([04c0551](https://github.com/qomodo-labs/action-trissue/commit/04c05519c995f40139fc3875fdf37964b0f4e145))
 
 ## [1.1.0](https://github.com/qomodo-labs/action-trissue/compare/1.0.2...1.1.0) (2025-03-26)
 

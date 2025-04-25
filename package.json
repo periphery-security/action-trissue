@@ -35,7 +35,8 @@
   "dependencies": {
     "@actions/core": "^1.11.0",
     "@actions/github": "^6.0.0",
-    "@octokit/rest": "^21.1.1"
+    "@octokit/rest": "^21.1.1",
+    "figlet": "^1.8.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.7",
@@ -46,6 +47,7 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.1",
     "@types/argparse": "^2.0.17",
+    "@types/figlet": "^1.7.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.24",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
