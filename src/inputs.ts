@@ -23,7 +23,7 @@ export class Inputs {
     }
     this.dryRun = core.getInput('dry-run').toLowerCase() === 'true' || false // Initialize dryRun
     figlet.text(
-      'privy',
+      'TRissue',
       {
         font: 'Standard'
       },
