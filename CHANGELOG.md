@@ -1,3 +1,9 @@
+## [1.2.4](https://github.com/periphery-security/action-trissue/compare/1.2.3...1.2.4) (2025-06-11)
+
+### Bug Fixes
+
+* all issues getting closed due to missmatch ([4292c3d](https://github.com/periphery-security/action-trissue/commit/4292c3d8b3172e758e9607b4156d8fcbd5a6d8ba))
+
 ## [1.2.3](https://github.com/periphery-security/action-trissue/compare/1.2.2...1.2.3) (2025-06-11)
 
 ### Bug Fixes

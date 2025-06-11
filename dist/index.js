@@ -27284,15 +27284,14 @@ function parseResults(data, existing_issues) {
             throw new TypeError(`The JSON entry .Results is not a list, got: ${typeof results}`);
         }
         const reports = [];
-        // Create a Set of stable identifiers from existing issues for efficient lookup.
-        // The identifier is now just VulnerabilityID + PackageName.
         const existingIssueSet = new Set();
+        const titleRegex = /^(.*?):.*? package (.*?)-/;
         for (const issue of existing_issues) {
-            const titleParts = issue.title.split(': ');
-            if (titleParts.length > 1) {
-                // Identifier is the CVE + the package name (the part after the first colon)
-                const identifier = `${titleParts[0].toLowerCase()}-${titleParts[1].toLowerCase()}`;
-                existingIssueSet.add(identifier);
+            const matches = issue.title.match(titleRegex);
+            if (matches && matches.length >= 3) {
+                const vulnerabilityId = matches[1].toLowerCase();
+                const packageName = matches[2].toLowerCase();
+                existingIssueSet.add(`${vulnerabilityId}-${packageName}`);
             }
         }
         for (let idx = 0; idx < results.length; idx++) {
@@ -27318,7 +27317,6 @@ function parseResults(data, existing_issues) {
                     continue;
                 }
                 const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`;
-                // Each vulnerability gets its own report.
                 const report = {
                     id: report_id,
                     package: `${package_name}-${vulnerability.InstalledVersion}`,
@@ -27343,7 +27341,6 @@ function generateIssues(reports) {
     const issues = [];
     for (const report of reports) {
         const vulnerability = report.vulnerabilities[0];
-        // Restore the original, more descriptive title.
         const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`;
         let issue_body = `## Title\n${vulnerability.Title}\n`;
         issue_body += `## Description\n${vulnerability.Description}\n`;
