@@ -48,7 +48,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery 1.0.0
+                        by Periphery 1.1.1
 `)
 
   const inputs = new Inputs()
@@ -92,12 +92,31 @@ async function main() {
       }
     }
 
+    core.info('--- Existing Issues ---')
+    for (const existingIssue of existingTrivyIssues) {
+      const identifier = getIdentifier(existingIssue)
+      core.info(
+        `Issue #${existingIssue.number}: '${existingIssue.title}' (Identifier: ${identifier})`
+      )
+    }
+
+    core.info('\n--- New Vulnerabilities ---')
+    for (const [identifier, issue] of newVulnerabilities.entries()) {
+      core.info(`Vulnerability: '${issue.title}' (Identifier: ${identifier})`)
+    }
+
     // Process existing issues: close stale ones, re-open active ones
     for (const existingIssue of existingTrivyIssues) {
       const identifier = getIdentifier(existingIssue)
       if (!identifier) continue
 
       const vulnerabilityIsStillPresent = newVulnerabilities.has(identifier)
+      core.info(
+        `\nProcessing issue #${existingIssue.number} ('${existingIssue.title}') with identifier '${identifier}'...`
+      )
+      core.info(
+        `Vulnerability still present in report: ${vulnerabilityIsStillPresent}`
+      )
 
       if (vulnerabilityIsStillPresent) {
         // The vulnerability is still in the scan.
@@ -125,6 +144,7 @@ async function main() {
       }
     }
 
+    core.info('\n--- Creating new issues for remaining vulnerabilities ---')
     // Create issues for any remaining (genuinely new) vulnerabilities
     for (const newIssue of newVulnerabilities.values()) {
       const issueOption: IssueOption & { hasFix: boolean } = {

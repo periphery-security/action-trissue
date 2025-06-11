@@ -35289,7 +35289,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery 1.0.0
+                        by Periphery 1.1.1
 `);
     const inputs = new Inputs();
     const github = new GitHub(inputs.token);
@@ -35326,12 +35326,23 @@ async function main() {
                 }
             }
         }
+        coreExports.info('--- Existing Issues ---');
+        for (const existingIssue of existingTrivyIssues) {
+            const identifier = getIdentifier(existingIssue);
+            coreExports.info(`Issue #${existingIssue.number}: '${existingIssue.title}' (Identifier: ${identifier})`);
+        }
+        coreExports.info('\n--- New Vulnerabilities ---');
+        for (const [identifier, issue] of newVulnerabilities.entries()) {
+            coreExports.info(`Vulnerability: '${issue.title}' (Identifier: ${identifier})`);
+        }
         // Process existing issues: close stale ones, re-open active ones
         for (const existingIssue of existingTrivyIssues) {
             const identifier = getIdentifier(existingIssue);
             if (!identifier)
                 continue;
             const vulnerabilityIsStillPresent = newVulnerabilities.has(identifier);
+            coreExports.info(`\nProcessing issue #${existingIssue.number} ('${existingIssue.title}') with identifier '${identifier}'...`);
+            coreExports.info(`Vulnerability still present in report: ${vulnerabilityIsStillPresent}`);
             if (vulnerabilityIsStillPresent) {
                 // The vulnerability is still in the scan.
                 if (existingIssue.state === 'closed') {
@@ -35356,6 +35367,7 @@ async function main() {
                 }
             }
         }
+        coreExports.info('\n--- Creating new issues for remaining vulnerabilities ---');
         // Create issues for any remaining (genuinely new) vulnerabilities
         for (const newIssue of newVulnerabilities.values()) {
             const issueOption = {
