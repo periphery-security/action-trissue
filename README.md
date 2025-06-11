@@ -1,4 +1,4 @@
-# Trissue – A legendary journey to secure your repositories!
+# TrIssue – A legendary journey to secure your repositories!
 
 This GitHub action reports results from a
 [Trivy](https://github.com/aquasecurity/trivy) vulnerability scan as GitHub

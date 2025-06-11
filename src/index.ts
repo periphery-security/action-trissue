@@ -1,5 +1,5 @@
 import * as process from 'process'
-import * as fs from 'fs/promises'
+import * as fs from 'fs/promises' // Use promises for async file reading
 import * as core from '@actions/core'
 import { generateIssues, parseResults } from './report-generator.js'
 import {
@@ -11,7 +11,6 @@ import {
 import { GitHub } from './github.js'
 import { Inputs } from './inputs.js'
 import { Issue } from './dataclass.js'
-import figlet from 'figlet'
 
 function abort(message: string, error?: Error): never {
   console.error(`Error: ${message}`)
@@ -22,29 +21,17 @@ function abort(message: string, error?: Error): never {
 }
 
 async function main() {
-  // Print the ASCII art logo
-  figlet.text(
-    'TRissue',
-    {
-      font: 'Big',
-      horizontalLayout: 'default',
-      verticalLayout: 'default'
-    },
-    (err, data) => {
-      if (err) {
-        console.log('Something went wrong...')
-        console.dir(err)
-        return
-      }
-      const byline = 'by Periphery'
-      const logoLines = data!.split('\n')
-      const logoWidth = Math.max(...logoLines.map(line => line.length))
-      const padding = ' '.repeat(Math.max(0, logoWidth - byline.length))
-      const finalLogo = `${data}\n${padding}${byline}`
+  // Print the custom ASCII art logo
+  console.log(`
+  _______ _____                    
+ |__   __|_   _|                   
+    | |_ __| |  ___ ___ _   _  ___ 
+    | | '__| | / __/ __| | | |/ _ \
+    | | | _| |_\__ \__ \ |_| |  __/
+    |_|_||_____|___/___/\__,_|\___|
+                        by Periphery
+`)
 
-      console.log(finalLogo)
-    }
-  )
   const inputs = new Inputs()
   const github = new GitHub(inputs.token)
 
