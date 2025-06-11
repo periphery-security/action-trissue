@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import { IssueInputs } from './interface.js'
-import figlet from 'figlet'
 
 export class Inputs {
   token: string
@@ -21,16 +20,6 @@ export class Inputs {
         core.getInput('enable-fix-label').toLowerCase() === 'true' || true,
       fixLabel: core.getInput('fix-label') || 'fix-available'
     }
-    this.dryRun = core.getInput('dry-run').toLowerCase() === 'true' || false // Initialize dryRun
-    figlet.text(
-      'TRissue',
-      {
-        font: 'Standard'
-      },
-      function (err, data) {
-        console.log(data)
-        console.log('by Periphery')
-      }
-    )
+    this.dryRun = core.getInput('dry-run').toLowerCase() === 'true' || false
   }
 }

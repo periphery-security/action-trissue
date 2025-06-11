@@ -5,13 +5,6 @@ export function parseResults(
   data: ReportDict,
   existing_issues: TrivyIssue[]
 ): Report[] | null {
-  /**
-   * Parses Trivy result structure and creates a report per vulnerability.
-   * Return null if no Results found.
-   *
-   * @param data The report data parsed from the JSON file.
-   * @param existing_issues List of GitHub issues used to exclude already reported vulnerabilities.
-   */
   try {
     const results = data.Results
 
@@ -22,12 +15,13 @@ export function parseResults(
     }
 
     const reports: Report[] = []
-
-    // Create a Set of existing issue identifiers for efficient lookup.
-    // Updated identifier now includes VulnerabilityID.
     const existingIssueSet = new Set<string>()
+
     for (const issue of existing_issues) {
-      existingIssueSet.add(issue.title.toLowerCase())
+      const match = issue.title.match(/^(.*?):/)
+      if (match && match[1]) {
+        existingIssueSet.add(match[1].toLowerCase())
+      }
     }
 
     for (let idx = 0; idx < results.length; idx++) {
@@ -58,25 +52,21 @@ export function parseResults(
 
       for (const vulnerability of vulnerabilities) {
         const package_name = vulnerability['PkgName']
-        const package_version = vulnerability['InstalledVersion']
-        const package_fixed_version = vulnerability['FixedVersion'] || undefined
-        const pkg = `${package_name}-${package_version}`
-        // Include VulnerabilityID in the identifier to ensure uniqueness per vulnerability.
-        const issueIdentifier = `${package_name.toLowerCase()} ${package_version.toLowerCase()} ${vulnerability.VulnerabilityID.toLowerCase()}`
+        const issueIdentifier =
+          `${vulnerability.VulnerabilityID.toLowerCase()}-${package_name.toLowerCase()}`
 
         if (existingIssueSet.has(issueIdentifier)) {
           continue
         }
 
-        const report_id = `${package_name}-${package_version}-${vulnerability.VulnerabilityID}`
+        const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`
 
-        // Each vulnerability gets its own report.
         const report: Report = {
           id: report_id,
-          package: pkg,
+          package: `${package_name}-${vulnerability.InstalledVersion}`,
           package_name: package_name,
-          package_version: package_version,
-          package_fixed_version: package_fixed_version,
+          package_version: vulnerability.InstalledVersion,
+          package_fixed_version: vulnerability['FixedVersion'] || undefined,
           package_type: package_type,
           target: result['Target'],
           vulnerabilities: [vulnerability]
@@ -94,20 +84,17 @@ export function parseResults(
 }
 
 export function generateIssues(reports: Report[]): Issue[] {
-  /**
-   * Iterates all reports (each representing a vulnerability) and renders them into GitHub issues.
-   */
   const issues: Issue[] = []
   for (const report of reports) {
-    // Since each report only has one vulnerability, grab it.
     const vulnerability = report.vulnerabilities[0]
 
-    const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`
+    const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_name}`
 
     let issue_body = `## Title\n${vulnerability.Title}\n`
     issue_body += `## Description\n${vulnerability.Description}\n`
     issue_body += `## Severity\n**${vulnerability.Severity}**\n`
-    issue_body += `## Fixed in Version\n**${report.package_fixed_version || 'No known fix at this time'}**\n\n`
+    issue_body += `## Fixed in Version\n**${report.package_fixed_version || 'No known fix at this time'
+      }**\n\n`
     issue_body += `## Primary URL\n${vulnerability.PrimaryURL}\n`
     issue_body += `## Additional Information\n`
     issue_body += `**Vulnerability ID:** ${vulnerability.VulnerabilityID}}\n`
