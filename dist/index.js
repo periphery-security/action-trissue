@@ -27277,23 +27277,13 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-function parseResults(data, existing_issues) {
+function parseResults(data) {
     try {
         const results = data.Results;
         if (!Array.isArray(results)) {
             throw new TypeError(`The JSON entry .Results is not a list, got: ${typeof results}`);
         }
         const reports = [];
-        const existingIssueSet = new Set();
-        const titleRegex = /^(.*?):.*? package (.*?)-/;
-        for (const issue of existing_issues) {
-            const matches = issue.title.match(titleRegex);
-            if (matches && matches.length >= 3) {
-                const vulnerabilityId = matches[1].toLowerCase();
-                const packageName = matches[2].toLowerCase();
-                existingIssueSet.add(`${vulnerabilityId}-${packageName}`);
-            }
-        }
         for (let idx = 0; idx < results.length; idx++) {
             const result = results[idx];
             if (typeof result !== 'object' ||
@@ -27311,11 +27301,6 @@ function parseResults(data, existing_issues) {
             }
             for (const vulnerability of vulnerabilities) {
                 const package_name = vulnerability['PkgName'];
-                const issueIdentifier = `${vulnerability.VulnerabilityID.toLowerCase()}-${package_name.toLowerCase()}`;
-                // If a matching issue already exists, skip creating a new report for it.
-                if (existingIssueSet.has(issueIdentifier)) {
-                    continue;
-                }
                 const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`;
                 const report = {
                     id: report_id,
@@ -27341,6 +27326,7 @@ function generateIssues(reports) {
     const issues = [];
     for (const report of reports) {
         const vulnerability = report.vulnerabilities[0];
+        // This creates the full, descriptive title you want.
         const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`;
         let issue_body = `## Title\n${vulnerability.Title}\n`;
         issue_body += `## Description\n${vulnerability.Description}\n`;
@@ -35276,6 +35262,15 @@ function abort(message, error) {
     }
     process$1.exit(1);
 }
+// Helper function to create a stable identifier from an issue title
+function getIdentifierFromTitle(title) {
+    const titleRegex = /^(.*?):.*? package (.*?)-/;
+    const matches = title.match(titleRegex);
+    if (matches && matches.length >= 3) {
+        return `${matches[1].toLowerCase()}-${matches[2].toLowerCase()}`;
+    }
+    return null;
+}
 async function main() {
     // Print the custom ASCII art logo
     console.log(String.raw `
@@ -35311,20 +35306,40 @@ async function main() {
         const trivyRaw = await fs.readFile(inputs.issue.filename, 'utf-8');
         const reportData = JSON.parse(trivyRaw);
         const existingTrivyIssues = await github.getTrivyIssues(inputs.issue.labels);
-        const reports = parseResults(reportData, existingTrivyIssues);
+        const reports = parseResults(reportData);
         const newVulnerabilities = new Map();
         if (reports) {
             for (const issue of generateIssues(reports)) {
-                const identifier = `${issue.report.vulnerabilities[0].VulnerabilityID.toLowerCase()}-${issue.report.package_name.toLowerCase()}`;
-                newVulnerabilities.set(identifier, issue);
+                const identifier = getIdentifierFromTitle(issue.title);
+                if (identifier) {
+                    newVulnerabilities.set(identifier, issue);
+                }
             }
         }
-        for (const existingIssue of existingTrivyIssues) {
-            const match = existingIssue.title.match(/^(.*?):/);
-            if (!match || !match[1])
-                continue;
-            const identifier = match[1].toLowerCase();
-            if (newVulnerabilities.has(identifier)) {
+        const newVulnIdentifiers = new Set(newVulnerabilities.keys());
+        const existingIssueIdentifiers = new Map();
+        for (const issue of existingTrivyIssues) {
+            const identifier = getIdentifierFromTitle(issue.title);
+            if (identifier) {
+                existingIssueIdentifiers.set(identifier, issue);
+            }
+        }
+        // Close stale issues
+        for (const [identifier, issue] of existingIssueIdentifiers.entries()) {
+            if (issue.state === 'open' && !newVulnIdentifiers.has(identifier)) {
+                if (inputs.dryRun) {
+                    coreExports.info(`[Dry Run] Would close stale issue: #${issue.number} - ${issue.title}`);
+                }
+                else {
+                    issuesClosed.push(await github.closeIssue(issue.number));
+                }
+            }
+        }
+        // Process new and existing vulnerabilities
+        for (const [identifier, issueData] of newVulnerabilities.entries()) {
+            const existingIssue = existingIssueIdentifiers.get(identifier);
+            if (existingIssue) {
+                // Issue exists, check if it's closed and needs reopening
                 if (existingIssue.state === 'closed') {
                     if (inputs.dryRun) {
                         coreExports.info(`[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`);
@@ -35333,38 +35348,28 @@ async function main() {
                         issuesUpdated.push(await github.reopenIssue(existingIssue.number));
                     }
                 }
-                newVulnerabilities.delete(identifier);
-            }
-            else if (existingIssue.state === 'open') {
-                if (inputs.dryRun) {
-                    coreExports.info(`[Dry Run] Would close stale issue: #${existingIssue.number} - ${existingIssue.title}`);
-                }
-                else {
-                    issuesClosed.push(await github.closeIssue(existingIssue.number));
-                }
-            }
-        }
-        for (const newIssue of newVulnerabilities.values()) {
-            const issueOptionBase = {
-                title: newIssue.title,
-                body: newIssue.body,
-                labels: inputs.issue.labels,
-                assignees: inputs.issue.assignees,
-                projectId: inputs.issue.projectId,
-                enableFixLabel: inputs.issue.enableFixLabel,
-                fixLabel: inputs.issue.fixLabel,
-                hasFix: newIssue.hasFix
-            };
-            if (inputs.dryRun) {
-                coreExports.info(`[Dry Run] Would create issue with title: ${newIssue.title}`);
             }
             else {
-                issuesCreated.push(await github.createIssue(issueOptionBase));
+                // Issue does not exist, create it
+                const issueOptionBase = {
+                    title: issueData.title,
+                    body: issueData.body,
+                    labels: inputs.issue.labels,
+                    assignees: inputs.issue.assignees,
+                    projectId: inputs.issue.projectId,
+                    enableFixLabel: inputs.issue.enableFixLabel,
+                    fixLabel: inputs.issue.fixLabel,
+                    hasFix: issueData.hasFix
+                };
+                if (inputs.dryRun) {
+                    coreExports.info(`[Dry Run] Would create issue with title: ${issueData.title}`);
+                }
+                else {
+                    issuesCreated.push(await github.createIssue(issueOptionBase));
+                }
             }
         }
-        fixableVulnerabilityExists =
-            issuesCreated.some((i) => newVulnerabilities.get(i.title.toLowerCase())?.hasFix) ||
-                existingTrivyIssues.some((i) => i.state === 'open' && i.labels.includes(inputs.issue.fixLabel));
+        fixableVulnerabilityExists = Array.from(newVulnerabilities.values()).some((issue) => issue.hasFix);
         coreExports.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString());
         coreExports.setOutput('created_issues', JSON.stringify(issuesCreated));
         coreExports.setOutput('closed_issues', JSON.stringify(issuesClosed));

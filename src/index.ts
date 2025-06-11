@@ -95,7 +95,9 @@ async function main() {
     for (const [identifier, issue] of existingIssueIdentifiers.entries()) {
       if (issue.state === 'open' && !newVulnIdentifiers.has(identifier)) {
         if (inputs.dryRun) {
-          core.info(`[Dry Run] Would close stale issue: #${issue.number} - ${issue.title}`)
+          core.info(
+            `[Dry Run] Would close stale issue: #${issue.number} - ${issue.title}`
+          )
         } else {
           issuesClosed.push(await github.closeIssue(issue.number))
         }
@@ -110,7 +112,9 @@ async function main() {
         // Issue exists, check if it's closed and needs reopening
         if (existingIssue.state === 'closed') {
           if (inputs.dryRun) {
-            core.info(`[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`)
+            core.info(
+              `[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`
+            )
           } else {
             issuesUpdated.push(await github.reopenIssue(existingIssue.number))
           }
@@ -128,21 +132,26 @@ async function main() {
           hasFix: issueData.hasFix
         }
         if (inputs.dryRun) {
-          core.info(`[Dry Run] Would create issue with title: ${issueData.title}`)
+          core.info(
+            `[Dry Run] Would create issue with title: ${issueData.title}`
+          )
         } else {
           issuesCreated.push(await github.createIssue(issueOptionBase))
         }
       }
     }
 
-    fixableVulnerabilityExists = Array.from(newVulnerabilities.values()).some(issue => issue.hasFix);
+    fixableVulnerabilityExists = Array.from(newVulnerabilities.values()).some(
+      (issue) => issue.hasFix
+    )
 
-
-    core.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString())
+    core.setOutput(
+      'fixable_vulnerability',
+      fixableVulnerabilityExists.toString()
+    )
     core.setOutput('created_issues', JSON.stringify(issuesCreated))
     core.setOutput('closed_issues', JSON.stringify(issuesClosed))
     core.setOutput('updated_issues', JSON.stringify(issuesUpdated))
-
   } catch (error) {
     if (error instanceof Error) {
       abort(`Error: ${error.message}`, error)

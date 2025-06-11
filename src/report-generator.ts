@@ -75,8 +75,9 @@ export function generateIssues(reports: Report[]): Issue[] {
     let issue_body = `## Title\n${vulnerability.Title}\n`
     issue_body += `## Description\n${vulnerability.Description}\n`
     issue_body += `## Severity\n**${vulnerability.Severity}**\n`
-    issue_body += `## Fixed in Version\n**${report.package_fixed_version || 'No known fix at this time'
-      }**\n\n`
+    issue_body += `## Fixed in Version\n**${
+      report.package_fixed_version || 'No known fix at this time'
+    }**\n\n`
     issue_body += `## Primary URL\n${vulnerability.PrimaryURL}\n`
     issue_body += `## Additional Information\n`
     issue_body += `**Vulnerability ID:** ${vulnerability.VulnerabilityID}}\n`
