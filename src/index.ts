@@ -1,5 +1,5 @@
 import * as process from 'process'
-import * as fs from 'fs/promises' // Use promises for async file reading
+import * as fs from 'fs/promises'
 import * as core from '@actions/core'
 import { generateIssues, parseResults } from './report-generator.js'
 import {
@@ -18,6 +18,16 @@ function abort(message: string, error?: Error): never {
     console.error(error)
   }
   process.exit(1)
+}
+
+// Helper function to create a stable identifier from an issue title
+function getIdentifierFromTitle(title: string): string | null {
+  const titleRegex = /^(.*?):.*? package (.*?)-/
+  const matches = title.match(titleRegex)
+  if (matches && matches.length >= 3) {
+    return `${matches[1].toLowerCase()}-${matches[2].toLowerCase()}`
+  }
+  return null
 }
 
 async function main() {
@@ -61,77 +71,78 @@ async function main() {
       inputs.issue.labels
     )
 
-    const reports = parseResults(reportData, existingTrivyIssues)
+    const reports = parseResults(reportData)
     const newVulnerabilities = new Map<string, Issue>()
-
     if (reports) {
       for (const issue of generateIssues(reports)) {
-        const identifier = `${issue.report.vulnerabilities[0].VulnerabilityID.toLowerCase()}-${issue.report.package_name.toLowerCase()}`
-        newVulnerabilities.set(identifier, issue)
+        const identifier = getIdentifierFromTitle(issue.title)
+        if (identifier) {
+          newVulnerabilities.set(identifier, issue)
+        }
       }
     }
 
-    for (const existingIssue of existingTrivyIssues) {
-      const match = existingIssue.title.match(/^(.*?):/)
-      if (!match || !match[1]) continue
+    const newVulnIdentifiers = new Set(newVulnerabilities.keys())
+    const existingIssueIdentifiers = new Map<string, TrivyIssue>()
+    for (const issue of existingTrivyIssues) {
+      const identifier = getIdentifierFromTitle(issue.title)
+      if (identifier) {
+        existingIssueIdentifiers.set(identifier, issue)
+      }
+    }
 
-      const identifier = match[1].toLowerCase()
+    // Close stale issues
+    for (const [identifier, issue] of existingIssueIdentifiers.entries()) {
+      if (issue.state === 'open' && !newVulnIdentifiers.has(identifier)) {
+        if (inputs.dryRun) {
+          core.info(`[Dry Run] Would close stale issue: #${issue.number} - ${issue.title}`)
+        } else {
+          issuesClosed.push(await github.closeIssue(issue.number))
+        }
+      }
+    }
 
-      if (newVulnerabilities.has(identifier)) {
+    // Process new and existing vulnerabilities
+    for (const [identifier, issueData] of newVulnerabilities.entries()) {
+      const existingIssue = existingIssueIdentifiers.get(identifier)
+
+      if (existingIssue) {
+        // Issue exists, check if it's closed and needs reopening
         if (existingIssue.state === 'closed') {
           if (inputs.dryRun) {
-            core.info(
-              `[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`
-            )
+            core.info(`[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`)
           } else {
             issuesUpdated.push(await github.reopenIssue(existingIssue.number))
           }
         }
-        newVulnerabilities.delete(identifier)
-      } else if (existingIssue.state === 'open') {
+      } else {
+        // Issue does not exist, create it
+        const issueOptionBase: IssueOption & { hasFix: boolean } = {
+          title: issueData.title,
+          body: issueData.body,
+          labels: inputs.issue.labels,
+          assignees: inputs.issue.assignees,
+          projectId: inputs.issue.projectId,
+          enableFixLabel: inputs.issue.enableFixLabel,
+          fixLabel: inputs.issue.fixLabel,
+          hasFix: issueData.hasFix
+        }
         if (inputs.dryRun) {
-          core.info(
-            `[Dry Run] Would close stale issue: #${existingIssue.number} - ${existingIssue.title}`
-          )
+          core.info(`[Dry Run] Would create issue with title: ${issueData.title}`)
         } else {
-          issuesClosed.push(await github.closeIssue(existingIssue.number))
+          issuesCreated.push(await github.createIssue(issueOptionBase))
         }
       }
     }
 
-    for (const newIssue of newVulnerabilities.values()) {
-      const issueOptionBase: IssueOption & { hasFix: boolean } = {
-        title: newIssue.title,
-        body: newIssue.body,
-        labels: inputs.issue.labels,
-        assignees: inputs.issue.assignees,
-        projectId: inputs.issue.projectId,
-        enableFixLabel: inputs.issue.enableFixLabel,
-        fixLabel: inputs.issue.fixLabel,
-        hasFix: newIssue.hasFix
-      }
-      if (inputs.dryRun) {
-        core.info(`[Dry Run] Would create issue with title: ${newIssue.title}`)
-      } else {
-        issuesCreated.push(await github.createIssue(issueOptionBase))
-      }
-    }
+    fixableVulnerabilityExists = Array.from(newVulnerabilities.values()).some(issue => issue.hasFix);
 
-    fixableVulnerabilityExists =
-      issuesCreated.some(
-        (i) => newVulnerabilities.get(i.title.toLowerCase())?.hasFix
-      ) ||
-      existingTrivyIssues.some(
-        (i) => i.state === 'open' && i.labels.includes(inputs.issue.fixLabel!)
-      )
 
-    core.setOutput(
-      'fixable_vulnerability',
-      fixableVulnerabilityExists.toString()
-    )
+    core.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString())
     core.setOutput('created_issues', JSON.stringify(issuesCreated))
     core.setOutput('closed_issues', JSON.stringify(issuesClosed))
     core.setOutput('updated_issues', JSON.stringify(issuesUpdated))
+
   } catch (error) {
     if (error instanceof Error) {
       abort(`Error: ${error.message}`, error)

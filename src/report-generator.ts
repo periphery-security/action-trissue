@@ -1,10 +1,7 @@
 import { Issue, Report } from './dataclass.js'
-import { ReportDict, TrivyIssue } from './interface.js'
+import { ReportDict } from './interface.js'
 
-export function parseResults(
-  data: ReportDict,
-  existing_issues: TrivyIssue[]
-): Report[] | null {
+export function parseResults(data: ReportDict): Report[] | null {
   try {
     const results = data.Results
 
@@ -15,16 +12,6 @@ export function parseResults(
     }
 
     const reports: Report[] = []
-    const existingIssueSet = new Set<string>()
-    const titleRegex = /^(.*?):.*? package (.*?)-/
-    for (const issue of existing_issues) {
-      const matches = issue.title.match(titleRegex)
-      if (matches && matches.length >= 3) {
-        const vulnerabilityId = matches[1].toLowerCase()
-        const packageName = matches[2].toLowerCase()
-        existingIssueSet.add(`${vulnerabilityId}-${packageName}`)
-      }
-    }
 
     for (let idx = 0; idx < results.length; idx++) {
       const result = results[idx]
@@ -54,13 +41,6 @@ export function parseResults(
 
       for (const vulnerability of vulnerabilities) {
         const package_name = vulnerability['PkgName']
-        const issueIdentifier = `${vulnerability.VulnerabilityID.toLowerCase()}-${package_name.toLowerCase()}`
-
-        // If a matching issue already exists, skip creating a new report for it.
-        if (existingIssueSet.has(issueIdentifier)) {
-          continue
-        }
-
         const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`
 
         const report: Report = {
@@ -89,6 +69,7 @@ export function generateIssues(reports: Report[]): Issue[] {
   for (const report of reports) {
     const vulnerability = report.vulnerabilities[0]
 
+    // This creates the full, descriptive title you want.
     const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`
 
     let issue_body = `## Title\n${vulnerability.Title}\n`
