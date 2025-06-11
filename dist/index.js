@@ -35262,8 +35262,17 @@ function abort(message, error) {
     }
     process$1.exit(1);
 }
-// Helper function to create a stable identifier from an issue title
-function getIdentifierFromTitle(title) {
+// Helper function to create a stable identifier from an issue title or report
+function getIdentifier(source) {
+    let title;
+    if ('title' in source) {
+        title = source.title;
+    }
+    else {
+        // This case is for the initial creation from a report
+        const vulnerability = source.report.vulnerabilities[0];
+        title = `${vulnerability.VulnerabilityID}: ${source.report.package_type} package ${source.report.package}`;
+    }
     const titleRegex = /^(.*?):.*? package (.*?)-/;
     const matches = title.match(titleRegex);
     if (matches && matches.length >= 3) {
@@ -35306,41 +35315,27 @@ async function main() {
         const trivyRaw = await fs.readFile(inputs.issue.filename, 'utf-8');
         const reportData = JSON.parse(trivyRaw);
         const existingTrivyIssues = await github.getTrivyIssues(inputs.issue.labels);
-        const reports = parseResults(reportData);
+        const reports = parseResults(reportData); // Simplified call
+        // Map all new vulnerabilities by their stable identifier
         const newVulnerabilities = new Map();
         if (reports) {
             for (const issue of generateIssues(reports)) {
-                const identifier = getIdentifierFromTitle(issue.title);
+                const identifier = getIdentifier(issue);
                 if (identifier) {
                     newVulnerabilities.set(identifier, issue);
                 }
             }
         }
-        const newVulnIdentifiers = new Set(newVulnerabilities.keys());
-        const existingIssueIdentifiers = new Map();
-        for (const issue of existingTrivyIssues) {
-            const identifier = getIdentifierFromTitle(issue.title);
-            if (identifier) {
-                existingIssueIdentifiers.set(identifier, issue);
-            }
-        }
-        // Close stale issues
-        for (const [identifier, issue] of existingIssueIdentifiers.entries()) {
-            if (issue.state === 'open' && !newVulnIdentifiers.has(identifier)) {
-                if (inputs.dryRun) {
-                    coreExports.info(`[Dry Run] Would close stale issue: #${issue.number} - ${issue.title}`);
-                }
-                else {
-                    issuesClosed.push(await github.closeIssue(issue.number));
-                }
-            }
-        }
-        // Process new and existing vulnerabilities
-        for (const [identifier, issueData] of newVulnerabilities.entries()) {
-            const existingIssue = existingIssueIdentifiers.get(identifier);
-            if (existingIssue) {
-                // Issue exists, check if it's closed and needs reopening
+        // Process existing issues: close stale ones, re-open active ones
+        for (const existingIssue of existingTrivyIssues) {
+            const identifier = getIdentifier(existingIssue);
+            if (!identifier)
+                continue;
+            const vulnerabilityIsStillPresent = newVulnerabilities.has(identifier);
+            if (vulnerabilityIsStillPresent) {
+                // The vulnerability is still in the scan.
                 if (existingIssue.state === 'closed') {
+                    // If the issue is closed, re-open it.
                     if (inputs.dryRun) {
                         coreExports.info(`[Dry Run] Would reopen issue #${existingIssue.number} ('${existingIssue.title}')`);
                     }
@@ -35348,28 +35343,43 @@ async function main() {
                         issuesUpdated.push(await github.reopenIssue(existingIssue.number));
                     }
                 }
+                // Mark this vulnerability as handled so we don't create a new issue for it.
+                newVulnerabilities.delete(identifier);
             }
-            else {
-                // Issue does not exist, create it
-                const issueOptionBase = {
-                    title: issueData.title,
-                    body: issueData.body,
-                    labels: inputs.issue.labels,
-                    assignees: inputs.issue.assignees,
-                    projectId: inputs.issue.projectId,
-                    enableFixLabel: inputs.issue.enableFixLabel,
-                    fixLabel: inputs.issue.fixLabel,
-                    hasFix: issueData.hasFix
-                };
+            else if (existingIssue.state === 'open') {
+                // If the issue is open, close it.
                 if (inputs.dryRun) {
-                    coreExports.info(`[Dry Run] Would create issue with title: ${issueData.title}`);
+                    coreExports.info(`[Dry Run] Would close stale issue: #${existingIssue.number} - ${existingIssue.title}`);
                 }
                 else {
-                    issuesCreated.push(await github.createIssue(issueOptionBase));
+                    issuesClosed.push(await github.closeIssue(existingIssue.number));
                 }
             }
         }
-        fixableVulnerabilityExists = Array.from(newVulnerabilities.values()).some((issue) => issue.hasFix);
+        // Create issues for any remaining (genuinely new) vulnerabilities
+        for (const newIssue of newVulnerabilities.values()) {
+            const issueOption = {
+                title: newIssue.title,
+                body: newIssue.body,
+                labels: inputs.issue.labels,
+                assignees: inputs.issue.assignees,
+                projectId: inputs.issue.projectId,
+                enableFixLabel: inputs.issue.enableFixLabel,
+                fixLabel: inputs.issue.fixLabel,
+                hasFix: newIssue.hasFix
+            };
+            if (inputs.dryRun) {
+                coreExports.info(`[Dry Run] Would create issue with title: ${newIssue.title}`);
+            }
+            else {
+                issuesCreated.push(await github.createIssue(issueOption));
+            }
+        }
+        // Determine if any fixable vulnerabilities exist at the end
+        const finalReports = parseResults(reportData);
+        fixableVulnerabilityExists = finalReports
+            ? finalReports.some((r) => r.package_fixed_version)
+            : false;
         coreExports.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString());
         coreExports.setOutput('created_issues', JSON.stringify(issuesCreated));
         coreExports.setOutput('closed_issues', JSON.stringify(issuesClosed));
