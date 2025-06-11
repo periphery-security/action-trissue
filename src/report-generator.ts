@@ -15,16 +15,14 @@ export function parseResults(
     }
 
     const reports: Report[] = []
-
-    // Create a Set of stable identifiers from existing issues for efficient lookup.
-    // The identifier is now just VulnerabilityID + PackageName.
     const existingIssueSet = new Set<string>()
+    const titleRegex = /^(.*?):.*? package (.*?)-/
     for (const issue of existing_issues) {
-      const titleParts = issue.title.split(': ')
-      if (titleParts.length > 1) {
-        // Identifier is the CVE + the package name (the part after the first colon)
-        const identifier = `${titleParts[0].toLowerCase()}-${titleParts[1].toLowerCase()}`
-        existingIssueSet.add(identifier)
+      const matches = issue.title.match(titleRegex)
+      if (matches && matches.length >= 3) {
+        const vulnerabilityId = matches[1].toLowerCase()
+        const packageName = matches[2].toLowerCase()
+        existingIssueSet.add(`${vulnerabilityId}-${packageName}`)
       }
     }
 
@@ -65,7 +63,6 @@ export function parseResults(
 
         const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`
 
-        // Each vulnerability gets its own report.
         const report: Report = {
           id: report_id,
           package: `${package_name}-${vulnerability.InstalledVersion}`,
@@ -76,7 +73,6 @@ export function parseResults(
           target: result['Target'],
           vulnerabilities: [vulnerability]
         }
-
         reports.push(report)
       }
     }
@@ -93,15 +89,13 @@ export function generateIssues(reports: Report[]): Issue[] {
   for (const report of reports) {
     const vulnerability = report.vulnerabilities[0]
 
-    // Restore the original, more descriptive title.
     const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`
 
     let issue_body = `## Title\n${vulnerability.Title}\n`
     issue_body += `## Description\n${vulnerability.Description}\n`
     issue_body += `## Severity\n**${vulnerability.Severity}**\n`
-    issue_body += `## Fixed in Version\n**${
-      report.package_fixed_version || 'No known fix at this time'
-    }**\n\n`
+    issue_body += `## Fixed in Version\n**${report.package_fixed_version || 'No known fix at this time'
+      }**\n\n`
     issue_body += `## Primary URL\n${vulnerability.PrimaryURL}\n`
     issue_body += `## Additional Information\n`
     issue_body += `**Vulnerability ID:** ${vulnerability.VulnerabilityID}}\n`
