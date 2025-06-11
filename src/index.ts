@@ -49,7 +49,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery 1.1.3
+                        by Periphery 1
 `)
 
   const inputs = new Inputs()
@@ -93,31 +93,103 @@ async function main() {
       }
     }
 
-    core.info('--- Existing Issues ---')
-    for (const existingIssue of existingTrivyIssues) {
-      const identifier = getIdentifier(existingIssue)
-      core.info(
-        `Issue #${existingIssue.number}: '${existingIssue.title}' (Identifier: ${identifier})`
-      )
+    // --- Start of Detailed Logging ---
+
+    // 1. Log all vulnerabilities from the current scan
+    core.startGroup('1. Vulnerabilities from Scan')
+    if (newVulnerabilities.size === 0) {
+      core.info('No vulnerabilities found in the scan.')
+    } else {
+      for (const identifier of newVulnerabilities.keys()) {
+        core.info(`- ${identifier}`)
+      }
+    }
+    core.endGroup()
+
+    // 2. Log all existing issues found on GitHub
+    core.startGroup('2. Existing GitHub Issues')
+    if (existingTrivyIssues.length === 0) {
+      core.info('No existing issues found with the specified labels.')
+    } else {
+      for (const issue of existingTrivyIssues) {
+        const identifier = getIdentifier(issue)
+        core.info(
+          `- Identifier: ${identifier || 'N/A'}, State: ${issue.state}, Title: ${issue.title}`
+        )
+      }
+    }
+    core.endGroup()
+
+    const issuesToCreate = new Set<string>()
+    const issuesToReopen = new Set<string>()
+    const issuesToClose = new Set<string>()
+
+    const processedVulnerabilities = new Set<string>()
+
+    for (const issue of existingTrivyIssues) {
+      const identifier = getIdentifier(issue)
+      if (!identifier) continue
+
+      if (newVulnerabilities.has(identifier)) {
+        if (issue.state === 'closed') {
+          issuesToReopen.add(identifier)
+        }
+        // Mark as processed so it's not considered for creation
+        processedVulnerabilities.add(identifier)
+      } else if (issue.state === 'open') {
+        issuesToClose.add(identifier)
+      }
     }
 
-    core.info('\n--- New Vulnerabilities ---')
-    for (const [identifier, issue] of newVulnerabilities.entries()) {
-      core.info(`Vulnerability: '${issue.title}' (Identifier: ${identifier})`)
+    for (const identifier of newVulnerabilities.keys()) {
+      if (!processedVulnerabilities.has(identifier)) {
+        issuesToCreate.add(identifier)
+      }
     }
+
+    // 3. Log which identifiers need new issues
+    core.startGroup('3. Issues to Create')
+    if (issuesToCreate.size === 0) {
+      core.info('No new issues need to be created.')
+    } else {
+      for (const identifier of issuesToCreate) {
+        core.info(`- ${identifier}`)
+      }
+    }
+    core.endGroup()
+
+    // 4. Log which identifiers need to be reopened
+    core.startGroup('4. Issues to Reopen')
+    if (issuesToReopen.size === 0) {
+      core.info('No issues need to be reopened.')
+    } else {
+      for (const identifier of issuesToReopen) {
+        core.info(`- ${identifier}`)
+      }
+    }
+    core.endGroup()
+
+    // 5. Log which identifiers need to be closed
+    core.startGroup('5. Issues to Close')
+    if (issuesToClose.size === 0) {
+      core.info('No issues need to be closed.')
+    } else {
+      for (const identifier of issuesToClose) {
+        core.info(`- ${identifier}`)
+      }
+    }
+    core.endGroup()
+
+    core.startGroup('Execution Phase')
+    // --- End of Detailed Logging ---
 
     // Process existing issues: close stale ones, re-open active ones
     for (const existingIssue of existingTrivyIssues) {
       const identifier = getIdentifier(existingIssue)
+      // This line now ensures that older issues with non-conforming titles are ignored.
       if (!identifier) continue
 
       const vulnerabilityIsStillPresent = newVulnerabilities.has(identifier)
-      core.info(
-        `\nProcessing issue #${existingIssue.number} ('${existingIssue.title}') with identifier '${identifier}'...`
-      )
-      core.info(
-        `Vulnerability still present in report: ${vulnerabilityIsStillPresent}`
-      )
 
       if (vulnerabilityIsStillPresent) {
         // The vulnerability is still in the scan.
@@ -145,7 +217,6 @@ async function main() {
       }
     }
 
-    core.info('\n--- Creating new issues for remaining vulnerabilities ---')
     // Create issues for any remaining (genuinely new) vulnerabilities
     for (const newIssue of newVulnerabilities.values()) {
       const issueOption: IssueOption & { hasFix: boolean } = {
@@ -164,6 +235,8 @@ async function main() {
         issuesCreated.push(await github.createIssue(issueOption))
       }
     }
+
+    core.endGroup()
 
     // Determine if any fixable vulnerabilities exist at the end
     const finalReports = parseResults(reportData)

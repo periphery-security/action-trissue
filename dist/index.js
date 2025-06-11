@@ -35290,7 +35290,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery 1.1.3
+                        by Periphery 1
 `);
     const inputs = new Inputs();
     const github = new GitHub(inputs.token);
@@ -35327,23 +35327,96 @@ async function main() {
                 }
             }
         }
-        coreExports.info('--- Existing Issues ---');
-        for (const existingIssue of existingTrivyIssues) {
-            const identifier = getIdentifier(existingIssue);
-            coreExports.info(`Issue #${existingIssue.number}: '${existingIssue.title}' (Identifier: ${identifier})`);
+        // --- Start of Detailed Logging ---
+        // 1. Log all vulnerabilities from the current scan
+        coreExports.startGroup('1. Vulnerabilities from Scan');
+        if (newVulnerabilities.size === 0) {
+            coreExports.info('No vulnerabilities found in the scan.');
         }
-        coreExports.info('\n--- New Vulnerabilities ---');
-        for (const [identifier, issue] of newVulnerabilities.entries()) {
-            coreExports.info(`Vulnerability: '${issue.title}' (Identifier: ${identifier})`);
+        else {
+            for (const identifier of newVulnerabilities.keys()) {
+                coreExports.info(`- ${identifier}`);
+            }
         }
+        coreExports.endGroup();
+        // 2. Log all existing issues found on GitHub
+        coreExports.startGroup('2. Existing GitHub Issues');
+        if (existingTrivyIssues.length === 0) {
+            coreExports.info('No existing issues found with the specified labels.');
+        }
+        else {
+            for (const issue of existingTrivyIssues) {
+                const identifier = getIdentifier(issue);
+                coreExports.info(`- Identifier: ${identifier || 'N/A'}, State: ${issue.state}, Title: ${issue.title}`);
+            }
+        }
+        coreExports.endGroup();
+        const issuesToCreate = new Set();
+        const issuesToReopen = new Set();
+        const issuesToClose = new Set();
+        const processedVulnerabilities = new Set();
+        for (const issue of existingTrivyIssues) {
+            const identifier = getIdentifier(issue);
+            if (!identifier)
+                continue;
+            if (newVulnerabilities.has(identifier)) {
+                if (issue.state === 'closed') {
+                    issuesToReopen.add(identifier);
+                }
+                // Mark as processed so it's not considered for creation
+                processedVulnerabilities.add(identifier);
+            }
+            else if (issue.state === 'open') {
+                issuesToClose.add(identifier);
+            }
+        }
+        for (const identifier of newVulnerabilities.keys()) {
+            if (!processedVulnerabilities.has(identifier)) {
+                issuesToCreate.add(identifier);
+            }
+        }
+        // 3. Log which identifiers need new issues
+        coreExports.startGroup('3. Issues to Create');
+        if (issuesToCreate.size === 0) {
+            coreExports.info('No new issues need to be created.');
+        }
+        else {
+            for (const identifier of issuesToCreate) {
+                coreExports.info(`- ${identifier}`);
+            }
+        }
+        coreExports.endGroup();
+        // 4. Log which identifiers need to be reopened
+        coreExports.startGroup('4. Issues to Reopen');
+        if (issuesToReopen.size === 0) {
+            coreExports.info('No issues need to be reopened.');
+        }
+        else {
+            for (const identifier of issuesToReopen) {
+                coreExports.info(`- ${identifier}`);
+            }
+        }
+        coreExports.endGroup();
+        // 5. Log which identifiers need to be closed
+        coreExports.startGroup('5. Issues to Close');
+        if (issuesToClose.size === 0) {
+            coreExports.info('No issues need to be closed.');
+        }
+        else {
+            for (const identifier of issuesToClose) {
+                coreExports.info(`- ${identifier}`);
+            }
+        }
+        coreExports.endGroup();
+        coreExports.startGroup('Execution Phase');
+        // --- End of Detailed Logging ---
         // Process existing issues: close stale ones, re-open active ones
         for (const existingIssue of existingTrivyIssues) {
             const identifier = getIdentifier(existingIssue);
+            // This line now ensures that older issues with non-conforming titles are ignored.
             if (!identifier)
                 continue;
             const vulnerabilityIsStillPresent = newVulnerabilities.has(identifier);
-            coreExports.info(`\nProcessing issue #${existingIssue.number} ('${existingIssue.title}') with identifier '${identifier}'...`);
-            coreExports.info(`Vulnerability still present in report: ${vulnerabilityIsStillPresent}`);
             if (vulnerabilityIsStillPresent) {
                 // The vulnerability is still in the scan.
                 if (existingIssue.state === 'closed') {
@@ -35368,7 +35441,6 @@ async function main() {
                 }
             }
         }
-        coreExports.info('\n--- Creating new issues for remaining vulnerabilities ---');
         // Create issues for any remaining (genuinely new) vulnerabilities
         for (const newIssue of newVulnerabilities.values()) {
             const issueOption = {
@@ -35388,6 +35460,7 @@ async function main() {
                 issuesCreated.push(await github.createIssue(issueOption));
             }
         }
+        coreExports.endGroup();
         // Determine if any fixable vulnerabilities exist at the end
         const finalReports = parseResults(reportData);
         fixableVulnerabilityExists = finalReports
