@@ -1,8 +1,16 @@
+## [1.2.2](https://github.com/periphery-security/action-trissue/compare/1.2.1...1.2.2) (2025-06-11)
+
+### Bug Fixes
+
+* remove figlet due to errors loading fonts ([7663742](https://github.com/periphery-security/action-trissue/commit/766374248fb637cb60d0c5027530e3017e41e6f3))
+* remove figlet due to errors loading fonts ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
+
 ## [1.2.1](https://github.com/periphery-security/action-trissue/compare/1.2.0...1.2.1) (2025-06-11)
 
 ### Bug Fixes
 
-* issues re-opening when not required ([7ce47e2](https://github.com/periphery-security/action-trissue/commit/7ce47e2f503c2ecd410289747a7381e14e1b1d52))
+- issues re-opening when not required
+  ([7ce47e2](https://github.com/periphery-security/action-trissue/commit/7ce47e2f503c2ecd410289747a7381e14e1b1d52))
 
 ## [1.2.0](https://github.com/qomodo-labs/action-trissue/compare/1.1.0...1.2.0) (2025-04-17)
 
