@@ -42,9 +42,9 @@ function getIdentifier(source: Issue | TrivyIssue): string | null {
 async function main() {
   // Print the custom ASCII art logo
   console.log(String.raw`
-  _______ _____                    
- |__   __|_   _|                   
-    | |_ __| |  ___ ___ _   _  ___ 
+  _______ _____
+ |__   __|_   _|
+    | |_ __| |  ___ ___ _   _  ___
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
