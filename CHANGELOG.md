@@ -1,9 +1,17 @@
+## [1.2.3](https://github.com/periphery-security/action-trissue/compare/1.2.2...1.2.3) (2025-06-11)
+
+### Bug Fixes
+
+* issue title back to normal and fix compare ([242a35e](https://github.com/periphery-security/action-trissue/commit/242a35e37e04057a23ca4a6f2af493f645a93e2a))
+
 ## [1.2.2](https://github.com/periphery-security/action-trissue/compare/1.2.1...1.2.2) (2025-06-11)
 
 ### Bug Fixes
 
-* remove figlet due to errors loading fonts ([7663742](https://github.com/periphery-security/action-trissue/commit/766374248fb637cb60d0c5027530e3017e41e6f3))
-* remove figlet due to errors loading fonts ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
+- remove figlet due to errors loading fonts
+  ([7663742](https://github.com/periphery-security/action-trissue/commit/766374248fb637cb60d0c5027530e3017e41e6f3))
+- remove figlet due to errors loading fonts
+  ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
 
 ## [1.2.1](https://github.com/periphery-security/action-trissue/compare/1.2.0...1.2.1) (2025-06-11)
 
