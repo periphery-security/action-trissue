@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/periphery-security/action-trissue/compare/1.2.0...1.2.1) (2025-06-11)
+
+### Bug Fixes
+
+* issues re-opening when not required ([7ce47e2](https://github.com/periphery-security/action-trissue/commit/7ce47e2f503c2ecd410289747a7381e14e1b1d52))
+
 ## [1.2.0](https://github.com/qomodo-labs/action-trissue/compare/1.1.0...1.2.0) (2025-04-17)
 
 ### Features
