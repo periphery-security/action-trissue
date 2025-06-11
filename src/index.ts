@@ -48,7 +48,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery
+                        by Periphery 1.0.0
 `)
 
   const inputs = new Inputs()
