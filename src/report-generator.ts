@@ -15,12 +15,16 @@ export function parseResults(
     }
 
     const reports: Report[] = []
-    const existingIssueSet = new Set<string>()
 
+    // Create a Set of stable identifiers from existing issues for efficient lookup.
+    // The identifier is now just VulnerabilityID + PackageName.
+    const existingIssueSet = new Set<string>()
     for (const issue of existing_issues) {
-      const match = issue.title.match(/^(.*?):/)
-      if (match && match[1]) {
-        existingIssueSet.add(match[1].toLowerCase())
+      const titleParts = issue.title.split(': ')
+      if (titleParts.length > 1) {
+        // Identifier is the CVE + the package name (the part after the first colon)
+        const identifier = `${titleParts[0].toLowerCase()}-${titleParts[1].toLowerCase()}`
+        existingIssueSet.add(identifier)
       }
     }
 
@@ -54,12 +58,14 @@ export function parseResults(
         const package_name = vulnerability['PkgName']
         const issueIdentifier = `${vulnerability.VulnerabilityID.toLowerCase()}-${package_name.toLowerCase()}`
 
+        // If a matching issue already exists, skip creating a new report for it.
         if (existingIssueSet.has(issueIdentifier)) {
           continue
         }
 
         const report_id = `${package_name}-${vulnerability.InstalledVersion}-${vulnerability.VulnerabilityID}`
 
+        // Each vulnerability gets its own report.
         const report: Report = {
           id: report_id,
           package: `${package_name}-${vulnerability.InstalledVersion}`,
@@ -75,7 +81,7 @@ export function parseResults(
       }
     }
 
-    return reports
+    return reports.length > 0 ? reports : null
   } catch (e) {
     console.error('Error during parseResults:', e)
     return null
@@ -87,7 +93,8 @@ export function generateIssues(reports: Report[]): Issue[] {
   for (const report of reports) {
     const vulnerability = report.vulnerabilities[0]
 
-    const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_name}`
+    // Restore the original, more descriptive title.
+    const issue_title = `${vulnerability.VulnerabilityID}: ${report.package_type} package ${report.package}`
 
     let issue_body = `## Title\n${vulnerability.Title}\n`
     issue_body += `## Description\n${vulnerability.Description}\n`
