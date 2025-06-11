@@ -22,7 +22,7 @@ function abort(message: string, error?: Error): never {
 
 async function main() {
   // Print the custom ASCII art logo
-  console.log(`
+  console.log(String.raw`
   _______ _____                    
  |__   __|_   _|                   
     | |_ __| |  ___ ___ _   _  ___ 
@@ -78,7 +78,6 @@ async function main() {
       const identifier = match[1].toLowerCase()
 
       if (newVulnerabilities.has(identifier)) {
-        const newIssueData = newVulnerabilities.get(identifier)!
         if (existingIssue.state === 'closed') {
           if (inputs.dryRun) {
             core.info(
@@ -89,15 +88,13 @@ async function main() {
           }
         }
         newVulnerabilities.delete(identifier)
-      } else {
-        if (existingIssue.state === 'open') {
-          if (inputs.dryRun) {
-            core.info(
-              `[Dry Run] Would close stale issue: #${existingIssue.number} - ${existingIssue.title}`
-            )
-          } else {
-            issuesClosed.push(await github.closeIssue(existingIssue.number))
-          }
+      } else if (existingIssue.state === 'open') {
+        if (inputs.dryRun) {
+          core.info(
+            `[Dry Run] Would close stale issue: #${existingIssue.number} - ${existingIssue.title}`
+          )
+        } else {
+          issuesClosed.push(await github.closeIssue(existingIssue.number))
         }
       }
     }
@@ -114,17 +111,15 @@ async function main() {
         hasFix: newIssue.hasFix
       }
       if (inputs.dryRun) {
-        core.info(
-          `[Dry Run] Would create issue with title: ${newIssue.title}`
-        )
+        core.info(`[Dry Run] Would create issue with title: ${newIssue.title}`)
       } else {
         issuesCreated.push(await github.createIssue(issueOptionBase))
       }
     }
 
     fixableVulnerabilityExists =
-      issuesCreated.some((i) =>
-        newVulnerabilities.get(i.title.toLowerCase())?.hasFix
+      issuesCreated.some(
+        (i) => newVulnerabilities.get(i.title.toLowerCase())?.hasFix
       ) ||
       existingTrivyIssues.some(
         (i) => i.state === 'open' && i.labels.includes(inputs.issue.fixLabel!)
