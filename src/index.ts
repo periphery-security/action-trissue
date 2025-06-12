@@ -22,16 +22,16 @@ function abort(message: string, error?: Error): never {
 
 // Helper function to create a stable identifier from an issue title or report
 function getIdentifier(source: Issue | TrivyIssue): string | null {
-  let title: string;
+  let title: string
 
   // Check for a property unique to TrivyIssue first.
   if ('report' in source && source.report) {
     // Inside this block, TypeScript knows `source` is of type `TrivyIssue`.
-    const vulnerability = source.report.vulnerabilities[0];
-    title = `${vulnerability.VulnerabilityID}: ${source.report.package_type} package ${source.report.package}`;
+    const vulnerability = source.report.vulnerabilities[0]
+    title = `${vulnerability.VulnerabilityID}: ${source.report.package_type} package ${source.report.package}`
   } else {
     // If the 'report' property doesn't exist, it must be an `Issue`.
-    title = source.title;
+    title = source.title
   }
 
   // Stricter regex: Only matches titles with a version number indicated by a hyphen.
