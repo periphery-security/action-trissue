@@ -1,3 +1,15 @@
+## [1.2.1](https://github.com/periphery-security/action-trissue/compare/1.2.0...1.2.1) (2025-06-12)
+
+### Bug Fixes
+
+* all issues being re-created ([561ba21](https://github.com/periphery-security/action-trissue/commit/561ba21dadddfe7cc196561b35d6c1954984c95f))
+* all issues getting closed due to missmatch ([4292c3d](https://github.com/periphery-security/action-trissue/commit/4292c3d8b3172e758e9607b4156d8fcbd5a6d8ba))
+* issue title back to normal and fix compare ([242a35e](https://github.com/periphery-security/action-trissue/commit/242a35e37e04057a23ca4a6f2af493f645a93e2a))
+* issues re-opening when not required ([7ce47e2](https://github.com/periphery-security/action-trissue/commit/7ce47e2f503c2ecd410289747a7381e14e1b1d52))
+* remove figlet due to errors loading fonts ([7663742](https://github.com/periphery-security/action-trissue/commit/766374248fb637cb60d0c5027530e3017e41e6f3))
+* remove figlet due to errors loading fonts ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
+* ticket state loop & adds additional logging ([f490429](https://github.com/periphery-security/action-trissue/commit/f49042952d0e84430b6d5a613a2c4d67cb0c7406))
+
 ## [1.2.4](https://github.com/periphery-security/action-trissue/compare/1.2.3...1.2.4) (2025-06-11)
 
 ### Bug Fixes

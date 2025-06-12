@@ -27386,6 +27386,7 @@ function requireContext () {
 	        this.action = process.env.GITHUB_ACTION;
 	        this.actor = process.env.GITHUB_ACTOR;
 	        this.job = process.env.GITHUB_JOB;
+	        this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
 	        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
 	        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
 	        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
@@ -35265,13 +35266,15 @@ function abort(message, error) {
 // Helper function to create a stable identifier from an issue title or report
 function getIdentifier(source) {
     let title;
-    if ('title' in source) {
-        title = source.title;
-    }
-    else {
-        // This case is for the initial creation from a report
+    // Check for a property unique to TrivyIssue first.
+    if ('report' in source && source.report) {
+        // Inside this block, TypeScript knows `source` is of type `TrivyIssue`.
         const vulnerability = source.report.vulnerabilities[0];
         title = `${vulnerability.VulnerabilityID}: ${source.report.package_type} package ${source.report.package}`;
+    }
+    else {
+        // If the 'report' property doesn't exist, it must be an `Issue`.
+        title = source.title;
     }
     // Stricter regex: Only matches titles with a version number indicated by a hyphen.
     const titleRegex = /^(.*?):.*? package (.*?)-/;
@@ -35290,7 +35293,7 @@ async function main() {
     | | '__| | / __/ __| | | |/ _ \
     | | | _| |_\__ \__ \ |_| |  __/
     |_|_||_____|___/___/\__,_|\___|
-                        by Periphery 1
+                        by Periphery
 `);
     const inputs = new Inputs();
     const github = new GitHub(inputs.token);
