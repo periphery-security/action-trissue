@@ -1,4 +1,4 @@
-name: 'Trivy Issue Reporter'
+name: 'TrIssue - Trivy Issue Creator'
 description: 'Creates GitHub Issues from Trivy scan results'
 author: 'Periphery Security'
 
