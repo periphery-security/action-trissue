@@ -43,9 +43,7 @@ export class GitHub {
           body: issue.body!,
           state: issue.state,
           labels: issue.labels
-            .map((label) =>
-              typeof label === 'string' ? label : (label.name ?? '')
-            )
+            .map((label) => (typeof label === 'string' ? label : (label.name ?? '')))
             .filter(Boolean),
           html_url: issue.html_url ?? ''
         }))
@@ -109,17 +107,14 @@ export class GitHub {
         htmlUrl: data.html_url ?? ''
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'An unknown error occurred.'
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
       throw new Error(
         `Failed to ${operation} issue${issueNumber ? ` #${issueNumber}` : ''}: ${errorMessage}`
       )
     }
   }
 
-  async createIssue(
-    options: IssueOption & { hasFix: boolean }
-  ): Promise<IssueResponse> {
+  async createIssue(options: IssueOption & { hasFix: boolean }): Promise<IssueResponse> {
     return this.handleIssueOperation('create', null, options)
   }
   async updateIssue(
@@ -159,12 +154,8 @@ export class GitHub {
           core.info(`Label "${label}" created successfully.`)
         } catch (createError: unknown) {
           if (isRequestError(createError)) {
-            core.error(
-              `Failed to create label "${label}": ${createError.message}`
-            )
-            throw new Error(
-              `Failed to create label "${label}": ${createError.message}`
-            )
+            core.error(`Failed to create label "${label}": ${createError.message}`)
+            throw new Error(`Failed to create label "${label}": ${createError.message}`)
           }
           throw createError
         }

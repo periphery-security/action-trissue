@@ -2,12 +2,7 @@ import * as process from 'process'
 import * as fs from 'fs/promises'
 import * as core from '@actions/core'
 import { generateIssues, parseResults } from './report-generator.js'
-import {
-  IssueOption,
-  IssueResponse,
-  ReportDict,
-  TrivyIssue
-} from './interface.js'
+import { IssueOption, IssueResponse, ReportDict, TrivyIssue } from './interface.js'
 import { GitHub } from './github.js'
 import { Inputs } from './inputs.js'
 import { Issue } from './dataclass.js'
@@ -80,9 +75,7 @@ async function main() {
 
     const trivyRaw = await fs.readFile(inputs.issue.filename, 'utf-8')
     const reportData = JSON.parse(trivyRaw) as ReportDict
-    const existingTrivyIssues: TrivyIssue[] = await github.getTrivyIssues(
-      inputs.issue.labels
-    )
+    const existingTrivyIssues: TrivyIssue[] = await github.getTrivyIssues(inputs.issue.labels)
     const reports = parseResults(reportData) // Simplified call
 
     // Map all new vulnerabilities by their stable identifier
@@ -247,10 +240,7 @@ async function main() {
       ? finalReports.some((r) => r.package_fixed_version)
       : false
 
-    core.setOutput(
-      'fixable_vulnerability',
-      fixableVulnerabilityExists.toString()
-    )
+    core.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString())
     core.setOutput('created_issues', JSON.stringify(issuesCreated))
     core.setOutput('closed_issues', JSON.stringify(issuesClosed))
     core.setOutput('updated_issues', JSON.stringify(issuesUpdated))

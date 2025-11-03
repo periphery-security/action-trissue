@@ -6,9 +6,7 @@ export function parseResults(data: ReportDict): Report[] | null {
     const results = data.Results
 
     if (!Array.isArray(results)) {
-      throw new TypeError(
-        `The JSON entry .Results is not a list, got: ${typeof results}`
-      )
+      throw new TypeError(`The JSON entry .Results is not a list, got: ${typeof results}`)
     }
 
     const reports: Report[] = []
@@ -16,11 +14,7 @@ export function parseResults(data: ReportDict): Report[] | null {
     for (let idx = 0; idx < results.length; idx++) {
       const result = results[idx]
 
-      if (
-        typeof result !== 'object' ||
-        result === null ||
-        Array.isArray(result)
-      ) {
+      if (typeof result !== 'object' || result === null || Array.isArray(result)) {
         throw new TypeError(
           `The JSON entry .Results[${idx}] is not a dictionary, got: ${typeof result}`
         )

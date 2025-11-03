@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "main"
+      - 'main'
 
 permissions:
   contents: write
@@ -33,8 +33,8 @@ jobs:
         id: release
         with:
           token: ${{ steps.generate_token.outputs.token }}
-          config-file: ".github/release-please-config.json"
-          manifest-file: ".github/release-please-manifest.json"
+          config-file: '.github/release-please-config.json'
+          manifest-file: '.github/release-please-manifest.json'
 
       - name: Print release outputs for debugging
         if: steps.release.outputs.release_created == 'true'
@@ -61,8 +61,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: "pnpm" # This will cache pnpm dependencies
-          cache-dependency-path: "action-privy/pnpm-lock.yaml" # Point to the lock file in the subdiretory
+          cache: 'pnpm' # This will cache pnpm dependencies
+          cache-dependency-path: 'action-privy/pnpm-lock.yaml' # Point to the lock file in the subdiretory
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -86,5 +86,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # The 'gh' CLI runs from the root, so it can find the zip file
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }}
-          ./action-privy.zip
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./action-privy.zip
