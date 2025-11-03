@@ -10,6 +10,33 @@
 * remove figlet due to errors loading fonts ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
 * ticket state loop & adds additional logging ([f490429](https://github.com/periphery-security/action-trissue/commit/f49042952d0e84430b6d5a613a2c4d67cb0c7406))
 
+## [2.0.0](https://github.com/periphery-security/action-trissue/compare/action-trissue@1.2.4...action-trissue@2.0.0) (2025-11-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Initial release
+
+### 🎉 New Features
+
+* add outputs ([04c0551](https://github.com/periphery-security/action-trissue/commit/04c05519c995f40139fc3875fdf37964b0f4e145))
+* Initial release ([4b8f9df](https://github.com/periphery-security/action-trissue/commit/4b8f9df805aa80db17a83e78972cf90efaa21349))
+* now re-opens closed issues if they are not fixed ([9d85f70](https://github.com/periphery-security/action-trissue/commit/9d85f70a4e77b7b2999a1f51726846c7d2879ce9))
+
+
+### 🐛 Bug Fixes
+
+* all issues being re-created ([561ba21](https://github.com/periphery-security/action-trissue/commit/561ba21dadddfe7cc196561b35d6c1954984c95f))
+* all issues getting closed due to missmatch ([4292c3d](https://github.com/periphery-security/action-trissue/commit/4292c3d8b3172e758e9607b4156d8fcbd5a6d8ba))
+* issue title back to normal and fix compare ([242a35e](https://github.com/periphery-security/action-trissue/commit/242a35e37e04057a23ca4a6f2af493f645a93e2a))
+* issues re-opening when not required ([7ce47e2](https://github.com/periphery-security/action-trissue/commit/7ce47e2f503c2ecd410289747a7381e14e1b1d52))
+* labels not being created as expected ([8030fb0](https://github.com/periphery-security/action-trissue/commit/8030fb06bb780abf71b3d1077ccd371248a7b598))
+* multiple linting errros fixed ([8536672](https://github.com/periphery-security/action-trissue/commit/853667233eb5d3e95efc909f953cb2a02ac9747e))
+* remove figlet due to errors loading fonts ([7663742](https://github.com/periphery-security/action-trissue/commit/766374248fb637cb60d0c5027530e3017e41e6f3))
+* remove figlet due to errors loading fonts ([3822a5e](https://github.com/periphery-security/action-trissue/commit/3822a5e1e404730a4495cacdf0058c1c86d1c62c))
+* ticket state loop & adds additional logging ([f490429](https://github.com/periphery-security/action-trissue/commit/f49042952d0e84430b6d5a613a2c4d67cb0c7406))
+* upgrade dependencies ([9a4c57f](https://github.com/periphery-security/action-trissue/commit/9a4c57f50d243df052772363ed18c1951e01121e))
+
 ## [1.2.4](https://github.com/periphery-security/action-trissue/compare/1.2.3...1.2.4) (2025-06-11)
 
 ### Bug Fixes
