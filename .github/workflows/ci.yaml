@@ -1,8 +1,6 @@
 name: Continuous Integration
 
 on:
-  workflow_dispatch:
-
   pull_request:
     branches:
       - main
@@ -21,55 +19,28 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # Specify a pnpm version
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .node-version
-          cache: npm
+          cache: pnpm
 
       - name: Install Dependencies
-        id: npm-ci
-        run: npm ci
+        id: pnpm-ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check Format
-        id: npm-format-check
-        run: npm run format:check
+        id: pnpm-format-check
+        run: pnpm run format:check
 
       - name: Lint
-        id: npm-lint
-        run: npm run lint
-
-      #- name: Test
-      #  id: npm-ci-test
-      #  run: npm run ci-test
-
-  test-action:
-    name: GitHub Actions Test
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Test Local Action
-        id: test-action
-        uses: ./
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          filename: .github/workflows/sample.json
-          dry-run: true
-          create-labels: true
-          enable-fix-label: true
-
-      - name: Print Output
-        id: output
-        run: |
-          echo "${{ steps.test-action.outputs.created_issues }}"
-          echo "${{ steps.test-action.outputs.updated_issues }}"
-          echo "${{ steps.test-action.outputs.closed_issues }}"
-          echo "${{ steps.test-action.outputs.fixable_vulnerability }}"
+        id: pnpm-lint
+        run: pnpm run lint
