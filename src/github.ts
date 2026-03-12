@@ -29,10 +29,11 @@ export class GitHub {
         return []
       }
 
-      const { data: trivyIssues } = await this.client.issues.listForRepo({
+      const trivyIssues = await this.client.paginate(this.client.issues.listForRepo, {
         ...github.context.repo,
         labels: labels.join(','),
-        state: 'all'
+        state: 'all',
+        per_page: 100
       })
 
       return trivyIssues

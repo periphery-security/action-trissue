@@ -1,44 +1,21 @@
 import * as process from 'process'
 import * as fs from 'fs/promises'
 import * as core from '@actions/core'
-import { generateIssues, parseResults } from './report-generator.js'
+import { generateIssues, parseResults, getIdentifier } from './report-generator.js'
 import { IssueOption, IssueResponse, ReportDict, TrivyIssue } from './interface.js'
 import { GitHub } from './github.js'
 import { Inputs } from './inputs.js'
 import { Issue } from './dataclass.js'
 
 function abort(message: string, error?: Error): never {
-  console.error(`Error: ${message}`)
+  core.setFailed(message)
   if (error) {
-    console.error(error)
+    core.error(error.message)
   }
   process.exit(1)
 }
 
-// Helper function to create a stable identifier from an issue title or report
-function getIdentifier(source: Issue | TrivyIssue): string | null {
-  let title: string
-
-  // Check for a property unique to TrivyIssue first.
-  if ('report' in source && source.report) {
-    // Inside this block, TypeScript knows `source` is of type `TrivyIssue`.
-    const vulnerability = source.report.vulnerabilities[0]
-    title = `${vulnerability.VulnerabilityID}: ${source.report.package_type} package ${source.report.package}`
-  } else {
-    // If the 'report' property doesn't exist, it must be an `Issue`.
-    title = source.title
-  }
-
-  // Stricter regex: Only matches titles with a version number indicated by a hyphen.
-  const titleRegex = /^(.*?):.*? package (.*?)-/
-  const matches = title.match(titleRegex)
-  if (matches && matches.length >= 3) {
-    return `${matches[1].toLowerCase()}-${matches[2].toLowerCase()}`
-  }
-  return null // Will return null for older, non-conforming titles
-}
-
-async function main() {
+export async function main() {
   // Print the custom ASCII art logo
   console.log(String.raw`
   _______ _____
@@ -64,19 +41,20 @@ async function main() {
       if (inputs.issue.enableFixLabel && inputs.issue.fixLabel) {
         labelsToCreate.push(inputs.issue.fixLabel)
       }
-      for (const label of labelsToCreate) {
+      
+      await Promise.all(labelsToCreate.map(async (label) => {
         if (inputs.dryRun) {
           core.info(`[Dry Run] Would create label: ${label}`)
         } else {
           await github.createLabelIfMissing(label)
         }
-      }
+      }))
     }
 
     const trivyRaw = await fs.readFile(inputs.issue.filename, 'utf-8')
     const reportData = JSON.parse(trivyRaw) as ReportDict
     const existingTrivyIssues: TrivyIssue[] = await github.getTrivyIssues(inputs.issue.labels)
-    const reports = parseResults(reportData) // Simplified call
+    const reports = parseResults(reportData)
 
     // Map all new vulnerabilities by their stable identifier
     const newVulnerabilities = new Map<string, Issue>()
@@ -235,9 +213,8 @@ async function main() {
     core.endGroup()
 
     // Determine if any fixable vulnerabilities exist at the end
-    const finalReports = parseResults(reportData)
-    fixableVulnerabilityExists = finalReports
-      ? finalReports.some((r) => r.package_fixed_version)
+    fixableVulnerabilityExists = reports
+      ? reports.some((r) => r.package_fixed_version)
       : false
 
     core.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString())
@@ -253,4 +230,6 @@ async function main() {
   }
 }
 
-main()
+if (process.env.NODE_ENV !== 'test') {
+  main()
+}

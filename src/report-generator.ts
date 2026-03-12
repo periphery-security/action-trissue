@@ -1,5 +1,21 @@
 import { Issue, Report } from './dataclass.js'
-import { ReportDict } from './interface.js'
+import { ReportDict, TrivyIssue } from './interface.js'
+
+// Helper function to create a stable identifier from an issue title or report
+export function getIdentifier(source: Issue | TrivyIssue): string | null {
+  if ('report' in source && source.report) {
+    const vulnerability = source.report.vulnerabilities[0]
+    return `${vulnerability.VulnerabilityID.toLowerCase()}-${source.report.package_name.toLowerCase()}`
+  }
+
+  // Stricter regex: Only matches titles with a version number indicated by a hyphen.
+  const titleRegex = /^(.*?):.*? package (.*?)-/
+  const matches = source.title.match(titleRegex)
+  if (matches && matches.length >= 3) {
+    return `${matches[1].toLowerCase()}-${matches[2].toLowerCase()}`
+  }
+  return null // Will return null for older, non-conforming titles
+}
 
 export function parseResults(data: ReportDict): Report[] | null {
   try {
@@ -58,8 +74,7 @@ export function parseResults(data: ReportDict): Report[] | null {
   }
 }
 
-export function generateIssues(reports: Report[]): Issue[] {
-  const issues: Issue[] = []
+export function* generateIssues(reports: Report[]): Generator<Issue> {
   for (const report of reports) {
     const vulnerability = report.vulnerabilities[0]
 
@@ -82,13 +97,12 @@ export function generateIssues(reports: Report[]): Issue[] {
     ).join('\n')
     issue_body += `## References\n${reference_items}\n\n`
 
-    issues.push({
+    yield {
       id: report.id,
       report: report,
       title: issue_title,
       body: issue_body,
       hasFix: report.package_fixed_version !== undefined
-    })
+    }
   }
-  return issues
 }

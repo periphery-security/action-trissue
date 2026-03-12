@@ -60,30 +60,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm' # This will cache pnpm dependencies
-          cache-dependency-path: 'action-privy/pnpm-lock.yaml' # Point to the lock file in the subdiretory
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: ./action-privy # Run this command in the subdirectory
 
       - name: Run tests
         run: pnpm run ci-test
-        working-directory: ./action-privy
 
       - name: Run build
-        run: pnpm run build
-        working-directory: ./action-privy
+        run: pnpm run package
 
       - name: Create ZIP archive
-        # This zips the 'build' dir inside 'action-privy'
-        # and places the resulting zip file in the root directory.
-        run: zip -r ../action-privy.zip ./build
-        working-directory: ./action-privy
+        run: zip -r action-trissue.zip ./dist
 
       - name: Upload Release Artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # The 'gh' CLI runs from the root, so it can find the zip file
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./action-privy.zip
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./action-trissue.zip

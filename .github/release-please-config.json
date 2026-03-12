@@ -16,9 +16,7 @@
   ],
   "packages": {
     ".": {
-      "component": "action-trissue",
       "release-type": "node",
-      "tag-separator": "@",
       "include-v-in-tag": false
     }
   },

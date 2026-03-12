@@ -17,7 +17,7 @@ export interface ResultDict {
 }
 
 export interface ReportDict {
-  Results: ResultDict
+  Results: ResultDict[]
 }
 
 export interface IssueInputs {
