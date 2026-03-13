@@ -48,46 +48,61 @@ const { main } = await import('../src/index.js')
 describe('index.ts main logic', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    
+
     // Default inputs
     ;(core.getInput as any).mockImplementation((name: string) => {
       switch (name) {
-        case 'token': return 'fake-token'
-        case 'filename': return '__tests__/trivy-results.json'
-        case 'labels': return 'trivy,vulnerability'
-        case 'create-labels': return 'true'
-        case 'enable-fix-label': return 'true'
-        case 'fix-label': return 'fix-available'
-        case 'dry-run': return 'false'
-        default: return ''
+        case 'token':
+          return 'fake-token'
+        case 'filename':
+          return '__tests__/trivy-results.json'
+        case 'labels':
+          return 'trivy,vulnerability'
+        case 'create-labels':
+          return 'true'
+        case 'enable-fix-label':
+          return 'true'
+        case 'fix-label':
+          return 'fix-available'
+        case 'dry-run':
+          return 'false'
+        default:
+          return ''
       }
     })
   })
 
   test('should create a new issue when a vulnerability is found and no existing issue exists', async () => {
     const mockTrivyData = JSON.stringify({
-      Results: [{
-        Type: 'alpine',
-        Target: 'alpine:3.18',
-        Vulnerabilities: [{
-          VulnerabilityID: 'CVE-2023-0001',
-          PkgName: 'openssl',
-          InstalledVersion: '3.1.0-r0',
-          FixedVersion: '3.1.0-r1',
-          Title: 'Test',
-          Description: 'Desc',
-          Severity: 'HIGH',
-          PrimaryURL: 'url',
-          References: []
-        }]
-      }]
+      Results: [
+        {
+          Type: 'alpine',
+          Target: 'alpine:3.18',
+          Vulnerabilities: [
+            {
+              VulnerabilityID: 'CVE-2023-0001',
+              PkgName: 'openssl',
+              InstalledVersion: '3.1.0-r0',
+              FixedVersion: '3.1.0-r1',
+              Title: 'Test',
+              Description: 'Desc',
+              Severity: 'HIGH',
+              PrimaryURL: 'url',
+              References: []
+            }
+          ]
+        }
+      ]
     })
     ;(fs.readFile as any).mockResolvedValue(mockTrivyData)
-
     ;(mockOctokit.paginate as any).mockResolvedValue([])
     ;(mockOctokit.issues.getLabel as any).mockResolvedValue({ data: {} })
     ;(mockOctokit.issues.create as any).mockResolvedValue({
-      data: { number: 1, html_url: 'https://github.com/owner/repo/issues/1', title: 'CVE-2023-0001: alpine package openssl-3.1.0-r0' }
+      data: {
+        number: 1,
+        html_url: 'https://github.com/owner/repo/issues/1',
+        title: 'CVE-2023-0001: alpine package openssl-3.1.0-r0'
+      }
     })
 
     await main()
@@ -98,21 +113,25 @@ describe('index.ts main logic', () => {
 
   test('should reopen a closed issue if vulnerability is still present', async () => {
     const mockTrivyData = JSON.stringify({
-      Results: [{
-        Type: 'alpine',
-        Target: 'alpine:3.18',
-        Vulnerabilities: [{
-          VulnerabilityID: 'CVE-2023-0001',
-          PkgName: 'openssl',
-          InstalledVersion: '3.1.0-r0',
-          FixedVersion: '3.1.0-r1',
-          Title: 'Test',
-          Description: 'Desc',
-          Severity: 'HIGH',
-          PrimaryURL: 'url',
-          References: []
-        }]
-      }]
+      Results: [
+        {
+          Type: 'alpine',
+          Target: 'alpine:3.18',
+          Vulnerabilities: [
+            {
+              VulnerabilityID: 'CVE-2023-0001',
+              PkgName: 'openssl',
+              InstalledVersion: '3.1.0-r0',
+              FixedVersion: '3.1.0-r1',
+              Title: 'Test',
+              Description: 'Desc',
+              Severity: 'HIGH',
+              PrimaryURL: 'url',
+              References: []
+            }
+          ]
+        }
+      ]
     })
     ;(fs.readFile as any).mockResolvedValue(mockTrivyData)
 
@@ -127,7 +146,6 @@ describe('index.ts main logic', () => {
         html_url: 'url'
       }
     ])
-    
     ;(mockOctokit.issues.getLabel as any).mockResolvedValue({ data: {} })
     ;(mockOctokit.issues.update as any).mockResolvedValue({
       data: { number: 1, html_url: 'url', title: 'title' }
@@ -135,10 +153,12 @@ describe('index.ts main logic', () => {
 
     await main()
 
-    expect(mockOctokit.issues.update).toHaveBeenCalledWith(expect.objectContaining({
-      issue_number: 1,
-      state: 'open'
-    }))
+    expect(mockOctokit.issues.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issue_number: 1,
+        state: 'open'
+      })
+    )
   })
 
   test('should close an open issue if vulnerability is no longer present', async () => {
@@ -156,7 +176,6 @@ describe('index.ts main logic', () => {
         html_url: 'url'
       }
     ])
-    
     ;(mockOctokit.issues.getLabel as any).mockResolvedValue({ data: {} })
     ;(mockOctokit.issues.update as any).mockResolvedValue({
       data: { number: 1, html_url: 'url', title: 'title' }
@@ -164,9 +183,11 @@ describe('index.ts main logic', () => {
 
     await main()
 
-    expect(mockOctokit.issues.update).toHaveBeenCalledWith(expect.objectContaining({
-      issue_number: 1,
-      state: 'closed'
-    }))
+    expect(mockOctokit.issues.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issue_number: 1,
+        state: 'closed'
+      })
+    )
   })
 })

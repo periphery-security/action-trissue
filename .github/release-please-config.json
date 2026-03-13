@@ -1,8 +1,6 @@
 {
   "separate-pull-requests": true,
   "always-update": true,
-  "bump-minor-pre-major": true,
-  "bump-patch-for-minor-pre-major": true,
   "pull-request-header": "🚀 **Release Time!** This PR contains the next release for our project.",
   "pull-request-footer": "---\n\nThis PR was generated automatically by Release Please. 🤖",
   "changelog-sections": [
@@ -17,7 +15,8 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "include-v-in-tag": false
+      "include-v-in-tag": false,
+      "last-release-sha": "f63d051a7549831a368e46037ed5a675b978c25a"
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"

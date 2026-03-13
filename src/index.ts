@@ -41,14 +41,16 @@ export async function main() {
       if (inputs.issue.enableFixLabel && inputs.issue.fixLabel) {
         labelsToCreate.push(inputs.issue.fixLabel)
       }
-      
-      await Promise.all(labelsToCreate.map(async (label) => {
-        if (inputs.dryRun) {
-          core.info(`[Dry Run] Would create label: ${label}`)
-        } else {
-          await github.createLabelIfMissing(label)
-        }
-      }))
+
+      await Promise.all(
+        labelsToCreate.map(async (label) => {
+          if (inputs.dryRun) {
+            core.info(`[Dry Run] Would create label: ${label}`)
+          } else {
+            await github.createLabelIfMissing(label)
+          }
+        })
+      )
     }
 
     const trivyRaw = await fs.readFile(inputs.issue.filename, 'utf-8')
@@ -213,9 +215,7 @@ export async function main() {
     core.endGroup()
 
     // Determine if any fixable vulnerabilities exist at the end
-    fixableVulnerabilityExists = reports
-      ? reports.some((r) => r.package_fixed_version)
-      : false
+    fixableVulnerabilityExists = reports ? reports.some((r) => r.package_fixed_version) : false
 
     core.setOutput('fixable_vulnerability', fixableVulnerabilityExists.toString())
     core.setOutput('created_issues', JSON.stringify(issuesCreated))
