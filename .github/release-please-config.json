@@ -17,7 +17,7 @@
       "release-type": "node",
       "include-v-in-tag": false,
       "include-component-in-tag": false,
-      "last-release-sha": "f63d051a7549831a368e46037ed5a675b978c25a"
+      "last-release-sha": "6e5218ac05273339a9e024647ca0987fc70783ff"
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
