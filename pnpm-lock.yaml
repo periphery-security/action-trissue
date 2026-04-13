@@ -16,8 +16,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@actions/github':
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.1.0
+        version: 9.1.0
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
@@ -134,8 +134,8 @@ packages:
   '@actions/github@7.0.0':
     resolution: {integrity: sha512-PyGODO938aoBTZd/IfN/+e+Pd5hUcVpyf+thm4CPESLeqhdSkq5QwMTGX9v84XHE1ifmHWBQ60KB8kIgm96opw==}
 
-  '@actions/github@9.0.0':
-    resolution: {integrity: sha512-yJ0RoswsAaKcvkmpCE4XxBRiy/whH2SdTBHWzs0gi4wkqTDhXMChjSdqBz/F4AeiDlP28rQqL33iHb+kjAMX6w==}
+  '@actions/github@9.1.0':
+    resolution: {integrity: sha512-u0hDGQeCS+7VNoLA8hYG65RLdPLMaPGfka0sZ0up7P0AiShqfX6xcuXNteGkQ7X7Tod7AMNwHd4p7DS63i8zzA==}
 
   '@actions/glob@0.5.1':
     resolution: {integrity: sha512-+dv/t2aKQdKp9WWSp+1yIXVJzH5Q38M0Mta26pzIbeec14EcIleMB7UU6N7sNgbEuYfyuVGpE5pOKjl6j1WXkA==}
@@ -2674,8 +2674,8 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
-  json-with-bigint@3.5.7:
-    resolution: {integrity: sha512-7ei3MdAI5+fJPVnKlW77TKNKwQ5ppSzWvhPuSuINT/GYW9ZOC1eRKOuhV9yHG5aEsUPj9BBx5JIekkmoLHxZOw==}
+  json-with-bigint@3.5.8:
+    resolution: {integrity: sha512-eq/4KP6K34kwa7TcFdtvnftvHCD9KvHOGGICWwMFc4dOOKF5t4iYqnfLK8otCRCRv06FXOzGGyqE8h8ElMvvdw==}
 
   json5@1.0.2:
     resolution: {integrity: sha512-g1MWMLBiz8FKi1e4w0UyVL3w+iJceWAFBAaBnnGKOpNa5f8TLktkbre1+s6oICydWAm+HRUGTmI+//xv2hvXYA==}
@@ -3409,8 +3409,8 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@6.24.0:
-    resolution: {integrity: sha512-lVLNosgqo5EkGqh5XUDhGfsMSoO8K0BAN0TyJLvwNRSl4xWGZlCVYsAIpa/OpA3TvmnM01GWcoKmc3ZWo5wKKA==}
+  undici@6.24.1:
+    resolution: {integrity: sha512-sC+b0tB1whOCzbtlx20fx3WgCXwkW627p4EA9uM+/tNNPkSS+eSEld6pAs9nDv7WbY1UUljBMYPtu9BCOrCWKA==}
     engines: {node: '>=18.17'}
 
   universal-user-agent@6.0.1:
@@ -3585,7 +3585,7 @@ snapshots:
       '@octokit/plugin-rest-endpoint-methods': 10.4.1(@octokit/core@5.2.2)
       '@octokit/request': 8.4.1
       '@octokit/request-error': 5.1.1
-      undici: 6.24.0
+      undici: 6.24.1
 
   '@actions/github@7.0.0':
     dependencies:
@@ -3595,9 +3595,9 @@ snapshots:
       '@octokit/plugin-rest-endpoint-methods': 10.4.1(@octokit/core@5.2.2)
       '@octokit/request': 8.4.1
       '@octokit/request-error': 5.1.1
-      undici: 6.24.0
+      undici: 6.24.1
 
-  '@actions/github@9.0.0':
+  '@actions/github@9.1.0':
     dependencies:
       '@actions/http-client': 3.0.2
       '@octokit/core': 7.0.6
@@ -3605,7 +3605,7 @@ snapshots:
       '@octokit/plugin-rest-endpoint-methods': 17.0.0(@octokit/core@7.0.6)
       '@octokit/request': 10.0.8
       '@octokit/request-error': 7.1.0
-      undici: 6.24.0
+      undici: 6.24.1
 
   '@actions/glob@0.5.1':
     dependencies:
@@ -3615,17 +3615,17 @@ snapshots:
   '@actions/http-client@2.2.3':
     dependencies:
       tunnel: 0.0.6
-      undici: 6.24.0
+      undici: 6.24.1
 
   '@actions/http-client@3.0.2':
     dependencies:
       tunnel: 0.0.6
-      undici: 6.24.0
+      undici: 6.24.1
 
   '@actions/http-client@4.0.0':
     dependencies:
       tunnel: 0.0.6
-      undici: 6.24.0
+      undici: 6.24.1
 
   '@actions/io@2.0.0': {}
 
@@ -4515,7 +4515,7 @@ snapshots:
       '@octokit/request-error': 7.1.0
       '@octokit/types': 16.0.0
       fast-content-type-parse: 3.0.0
-      json-with-bigint: 3.5.7
+      json-with-bigint: 3.5.8
       universal-user-agent: 7.0.3
 
   '@octokit/request@8.4.1':
@@ -6677,7 +6677,7 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
-  json-with-bigint@3.5.7: {}
+  json-with-bigint@3.5.8: {}
 
   json5@1.0.2:
     dependencies:
@@ -7452,7 +7452,7 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici@6.24.0: {}
+  undici@6.24.1: {}
 
   universal-user-agent@6.0.1: {}
 
